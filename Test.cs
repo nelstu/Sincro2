@@ -8,6 +8,7 @@ using System.Xml;
 using System.IO;
 using MySql.Data.MySqlClient;
 using System.Data.SQLite;
+using System.Diagnostics;
 
 namespace Sincro2
 {
@@ -22,11 +23,12 @@ namespace Sincro2
                 String fi = dxml+ beginpath;
                 String fiout = dsal + beginpath;
                 xDoc.Load(fi);
-
-                XmlNodeList xDte = xDoc.GetElementsByTagName("Encabezado");
+            XmlNodeList xDte1 = xDoc.GetElementsByTagName("Adicional");
+            XmlNodeList xDte = xDoc.GetElementsByTagName("Encabezado");
                 XmlNodeList xFolio = ((XmlElement)xDte[0]).GetElementsByTagName("Folio");
                 XmlNodeList xFchEmis = ((XmlElement)xDte[0]).GetElementsByTagName("FchEmis");
-                XmlNodeList xTipoDTE = ((XmlElement)xDte[0]).GetElementsByTagName("TipoDTE");
+            XmlNodeList xFchVenc = ((XmlElement)xDte[0]).GetElementsByTagName("FchVenc");
+            XmlNodeList xTipoDTE = ((XmlElement)xDte[0]).GetElementsByTagName("TipoDTE");
 
             XmlNodeList xTipoDespacho = ((XmlElement)xDte[0]).GetElementsByTagName("TipoDespacho");
             XmlNodeList xIndTraslado = ((XmlElement)xDte[0]).GetElementsByTagName("IndTraslado");
@@ -46,12 +48,16 @@ namespace Sincro2
             XmlNodeList xDirDest = ((XmlElement)xDte[0]).GetElementsByTagName("DirDest");
             XmlNodeList xCmnaDest = ((XmlElement)xDte[0]).GetElementsByTagName("CmnaDest");
             XmlNodeList xCiudadDest = ((XmlElement)xDte[0]).GetElementsByTagName("CiudadDest");
+            //nodo emisor
+            XmlNodeList xCodven= ((XmlElement)xDte[0]).GetElementsByTagName("CdgVendedor");
+            XmlNodeList xA1 = ((XmlElement)xDte1[0]).GetElementsByTagName("A1");
 
+            //fin nodo emisor
 
 
             string xFol = "";
-                string xFch = "";
-                string xrutr = "";
+                string xFch = ""; string xFch2 = "";
+            string xrutr = "";
                 string xrazonr = "";
                 string xdirr = "";
                 string xcomr = "";
@@ -62,10 +68,29 @@ namespace Sincro2
             string xInd = "";
             string xneto = ""; string xiv = ""; string xtot = "";
             string xPat = "";string xDirD = "";string xCmnaD = "";string xCiudadD = "";
-            string xTpoDoc = ""; string xforef = ""; string xFchR = ""; string xRazRe="";string xCodRe = "";
+            string xTpoDoc = ""; string xforef = ""; string xFchR = ""; string xRazRe="";string xCodRe = "";string xA = "";
+            string xCodv = "";
 
+            //forma
+            foreach (XmlElement nodo in xA1)
+            {
+                xA = nodo.InnerText;
+               // Console.WriteLine(xA);
+               // Trace.Indent();
+               // Trace.WriteLine("Forma:");
+               // Console.WriteLine(xA);
+               
+               // Trace.Unindent();
+               // Trace.Flush();
+            }
 
-                //folio
+            //vendedor
+            foreach (XmlElement nodo in xCodven)
+            {
+                xCodv = nodo.InnerText;
+                Console.WriteLine(xCodv);
+            }
+            //folio
             foreach (XmlElement nodo in xFolio)
                 {
                     xFol = nodo.InnerText;
@@ -79,8 +104,16 @@ namespace Sincro2
                     Console.WriteLine(xFch);
                 }
 
-                //Tipo DTE
-                foreach (XmlElement nodo in xTipoDTE)
+            //FchVenc
+            //
+            foreach (XmlElement nodo in xFchVenc)
+            {
+                xFch2 = nodo.InnerText;
+                Console.WriteLine(xFch2);
+            }
+
+            //Tipo DTE
+            foreach (XmlElement nodo in xTipoDTE)
                 {
                      xTDTE = nodo.InnerText;
                     Console.WriteLine(xTDTE);
@@ -198,8 +231,9 @@ namespace Sincro2
                     xtot = nodo.InnerText;
                     Console.WriteLine(xtot);
                 }
-            if (String.Equals(xTDTE, "61"))
+            if (String.Equals(xTDTE, "61") || String.Equals(xTDTE, "33"))
             {
+                Console.WriteLine("Si ahi Referencia");
                 //referencia
                 XmlNodeList xRef = xDoc.GetElementsByTagName("Referencia");
                 if (xRef.Count!=0) {
@@ -243,18 +277,21 @@ namespace Sincro2
                     xRazRe = nodo.InnerText;
                     Console.WriteLine(xRazRe);
                 }
+                    insertref( xFol, xforef, xFchR, xTpoDoc, xRazRe, ip, user, pa, database);
 
 
+                }
 
             }
+            else
+            {
+                Console.WriteLine("No ahi Referencia");
+            }
+            //fin referencia
 
-        }
-        //fin referencia
+         
 
-
-
-
-        XmlNodeList xDtedetalle = xDoc.GetElementsByTagName("Detalle");
+            XmlNodeList xDtedetalle = xDoc.GetElementsByTagName("Detalle");
 
 
                 // Guardamos los nodos hijos de personas (que se llaman persona) en la variable 'nodosPersona'
@@ -289,7 +326,7 @@ namespace Sincro2
 
                 }
 
-                insertregistro(xCodRe,xTpoDoc, xforef, xFchR, xRazRe, xTipo, xInd,xTDTE, xFol, xFch, xrutr, xrazonr, xdirr, xcomr, xciur, xgirr, xneto, xiv, xtot, ip, user, pa, database);
+                insertregistro(xA,xCodv,xFch2, xCodRe,xTpoDoc, xforef, xFchR, xRazRe, xTipo, xInd,xTDTE, xFol, xFch, xrutr, xrazonr, xdirr, xcomr, xciur, xgirr, xneto, xiv, xtot, ip, user, pa, database);
 
 
 
@@ -301,8 +338,54 @@ namespace Sincro2
 
 
             }
+        //   insertref( xFol, xforef, xFchR, xCodRe, xRazRe);
+        public static void insertref( string xFol, string xforef, string xFchR, string xCodRe, string xRazRe, string ip, string user, string pa, string database)
+        {
+            //your MySQL connection string
+            string connStr = "server=" + ip + ";user=" + user + ";database=" + database + ";port=3306;password=" + pa;
 
-            public static void insertdetalle(string xTDTE,string xFol, string dnombre, string dcant, string dpre, string dmon, string ip, string user, string pa, string database)
+            MySqlConnection conn = new MySqlConnection(connStr);
+            try
+            {
+                Console.WriteLine("Connecting to MySQL...");
+                conn.Open();
+
+
+                MySqlCommand comm = conn.CreateCommand();
+                String sql = "";
+           
+                    sql = "INSERT INTO dteref(tporef,feref,folioref,dte) VALUES (@tporef,@feref,@folioref, @dte)";
+
+                Console.WriteLine("sql->"+sql);
+
+                comm.CommandText = sql;
+           
+
+                comm.Parameters.AddWithValue("@tporef", xCodRe);
+                comm.Parameters.AddWithValue("@feref", xFchR);
+                comm.Parameters.AddWithValue("@folioref", xforef);
+                comm.Parameters.AddWithValue("@dte", xFol);
+
+                Console.WriteLine("sql->" + xCodRe+ "-" +xFchR +"-" +xforef+"-"+xFol);
+
+
+                comm.ExecuteNonQuery();
+                conn.Close();
+
+
+            }
+            catch (Exception err)
+            {
+                
+                Console.WriteLine(err.ToString());
+            }
+
+            conn.Close();
+            Console.WriteLine("Connection Closed. ...");
+            //Console.Read();
+            //mysql
+        }
+        public static void insertdetalle(string xTDTE,string xFol, string dnombre, string dcant, string dpre, string dmon, string ip, string user, string pa, string database)
             {
                 string connStr = "server="+ip+";user="+user+";database="+database+";port=3306;password="+pa;
 
@@ -332,28 +415,28 @@ namespace Sincro2
                     String sql = "";
                     if (String.Equals(xTDTE, "33"))
                        {
-                        sql = "INSERT INTO detdocumentos(numero,codigo,producto,un,precio,cantidad,total) VALUES (@numero, @codigo, @producto, @un, @precio, @cantidad, @total)";
+                        sql = "INSERT INTO detdocumentos(ide,numero,codigo,producto,un,precio,cantidad,total) VALUES (@ide,@numero, @codigo, @producto, @un, @precio, @cantidad, @total)";
                        }
 
                 if (String.Equals(xTDTE, "52"))
                 {
-                    sql = "INSERT INTO detdocumentosgv(numero,codigo,producto,un,precio,cantidad,total) VALUES (@numero, @codigo, @producto, @un, @precio, @cantidad, @total)";
+                    sql = "INSERT INTO detdocumentosgv(ide,numero,codigo,producto,un,precio,cantidad,total) VALUES (@ide,@numero, @codigo, @producto, @un, @precio, @cantidad, @total)";
                 }
 
                 if (String.Equals(xTDTE, "61"))
                 {
-                    sql = "INSERT INTO detdocumentosncv(numero,codigo,producto,un,precio,cantidad,total) VALUES (@numero, @codigo, @producto, @un, @precio, @cantidad, @total)";
+                    sql = "INSERT INTO detdocumentosncv(ide,numero,codigo,producto,un,precio,cantidad,total) VALUES (@ide,@numero, @codigo, @producto, @un, @precio, @cantidad, @total)";
                 }
 
                 if (String.Equals(xTDTE, "0"))
                 {
-                    sql = "INSERT INTO detdocumentosbol(numero,codigo,producto,un,precio,cantidad,total) VALUES (@numero, @codigo, @producto, @un, @precio, @cantidad, @total)";
+                    sql = "INSERT INTO detdocumentosbol(ide,numero,codigo,producto,un,precio,cantidad,total) VALUES (@ide,@numero, @codigo, @producto, @un, @precio, @cantidad, @total)";
                 }
                 comm.CommandText = sql;
-                    //comm.CommandText = "INSERT INTO documentos2(fecha) VALUES (@fecha)";
+                //comm.CommandText = "INSERT INTO documentos2(fecha) VALUES (@fecha)";
 
-
-                    comm.Parameters.AddWithValue("@numero", xFol);
+                comm.Parameters.AddWithValue("@ide", xFol);
+                comm.Parameters.AddWithValue("@numero", xFol);
                     comm.Parameters.AddWithValue("@codigo", dcodigo);
                     comm.Parameters.AddWithValue("@producto", dnombre);
                     comm.Parameters.AddWithValue("@un", dun);
@@ -374,7 +457,7 @@ namespace Sincro2
                 conn.Close();
                 Console.WriteLine("Connection Closed. ...");
             }
-            public static void insertregistro(string xCodRe,string xTpoDoc, string xforef, string xFchR, string xRazRe, string xTipo, string xInd, string xTDTE,string xFol, String xFch, string xrutr, string xrazonr, string xdirr, string xcomr, string xciur, string xgirr, string xneto, string xiv, string xtot, string ip, string user, string pa, string database)
+            public static void insertregistro(string xA,string xCodv,string xFchR2, string xCodRe,string xTpoDoc, string xforef, string xFchR, string xRazRe, string xTipo, string xInd, string xTDTE,string xFol, String xFch, string xrutr, string xrazonr, string xdirr, string xcomr, string xciur, string xgirr, string xneto, string xiv, string xtot, string ip, string user, string pa, string database)
             {
                 //mysql
 
@@ -387,45 +470,35 @@ namespace Sincro2
                     Console.WriteLine("Connecting to MySQL...");
                     conn.Open();
 
-                    //SQL Query to execute
-                    //selecting only first 10 rows for demo
-                    //string sql = "select * from documentos limit 0,10;";
-                    //MySqlCommand cmd = new MySqlCommand(sql, conn);
-                    //MySqlDataReader rdr = cmd.ExecuteReader();
 
-                    //read the data
-                    //while (rdr.Read())
-                    //{
-                    //  Console.WriteLine(rdr[0] + " -- " + rdr[1] + " -- " + rdr[2]);
-                    // }
-                    // rdr.Close();
 
                     MySqlCommand comm = conn.CreateCommand();
                     String sql = "";
                     if (String.Equals(xTDTE, "33"))
                        {
-                        sql = "INSERT INTO documentos(fecha,rut,razon,direccion,comuna,ciudad,neto,iva,total,numero,giro,forma) VALUES (@fecha, @rut, @razon, @direccion, @comuna, @ciudad, @neto, @iva, @total, @numero, @giro, @forma)";
+                        sql = "INSERT INTO documentos(vendedor,venc,fecha,rut,razon,direccion,comuna,ciudad,neto,iva,total,numero,giro,forma) VALUES (@vendedor,@fecha2,@fecha, @rut, @razon, @direccion, @comuna, @ciudad, @neto, @iva, @total, @numero, @giro, @forma)";
                        }
 
                 if (String.Equals(xTDTE, "52"))
                 {
-                    sql = "INSERT INTO documentosgv(IndTraslado,TipoDespacho,fecha,rut,razon,direccion,comuna,ciudad,neto,iva,total,numero,giro,forma) VALUES (@IndTraslado,@TipoDespacho,@fecha, @rut, @razon, @direccion, @comuna, @ciudad, @neto, @iva, @total, @numero, @giro, @forma)";
+                    sql = "INSERT INTO documentosgv(vendedor,IndTraslado,TipoDespacho,fecha,rut,razon,direccion,comuna,ciudad,neto,iva,total,numero,giro,forma) VALUES (@vendedor,@IndTraslado,@TipoDespacho,@fecha, @rut, @razon, @direccion, @comuna, @ciudad, @neto, @iva, @total, @numero, @giro, @forma)";
                 }
 
                 if (String.Equals(xTDTE, "61"))
                 {
-                    sql = "INSERT INTO documentosncv(codref,tpodocref, folioref, feref, razonref,fecha,rut,razon,direccion,comuna,ciudad,neto,iva,total,numero,giro,forma) VALUES (@codref,@tpodocref, @folioref, @feref, @razonref,@fecha, @rut, @razon, @direccion, @comuna, @ciudad, @neto, @iva, @total, @numero, @giro, @forma)";
+                    sql = "INSERT INTO documentosncv(vendedor,codref,tpodocref, folioref, feref, razonref,fecha,rut,razon,direccion,comuna,ciudad,neto,iva,total,numero,giro,forma) VALUES (@vendedor,@codref,@tpodocref, @folioref, @feref, @razonref,@fecha, @rut, @razon, @direccion, @comuna, @ciudad, @neto, @iva, @total, @numero, @giro, @forma)";
                 }
 
                 if (String.Equals(xTDTE, "0"))
                 {
-                    sql = "INSERT INTO documentosbol(fecha,rut,razon,direccion,comuna,ciudad,neto,iva,total,numero,giro,forma) VALUES (@fecha, @rut, @razon, @direccion, @comuna, @ciudad, @neto, @iva, @total, @numero, @giro, @forma)";
+                    sql = "INSERT INTO documentosbol(dte,vendedor,fecha,rut,razon,direccion,comuna,ciudad,neto,iva,total,numero,giro,forma) VALUES (@dte,@vendedor,@fecha, @rut, @razon, @direccion, @comuna, @ciudad, @neto, @iva, @total, @numero, @giro, @forma)";
                 }
                 comm.CommandText =sql ;
-                    //comm.CommandText = "INSERT INTO documentos2(fecha) VALUES (@fecha)";
+                //comm.CommandText = "INSERT INTO documentos2(fecha) VALUES (@fecha)";
 
-
-                    comm.Parameters.AddWithValue("@fecha", xFch);
+                comm.Parameters.AddWithValue("@vendedor", xCodv);
+                comm.Parameters.AddWithValue("@fecha", xFch);
+                    comm.Parameters.AddWithValue("@fecha2", xFchR2);
                     comm.Parameters.AddWithValue("@rut", xrutr);
                     comm.Parameters.AddWithValue("@razon", xrazonr);
                     comm.Parameters.AddWithValue("@direccion", xdirr);
@@ -435,8 +508,9 @@ namespace Sincro2
                     comm.Parameters.AddWithValue("@iva", xiv);
                     comm.Parameters.AddWithValue("@total", xtot);
                     comm.Parameters.AddWithValue("@numero", xFol);
-                    comm.Parameters.AddWithValue("@giro", xgirr);
-                    comm.Parameters.AddWithValue("@forma", "Contado");
+                comm.Parameters.AddWithValue("@dte", xFol);
+                comm.Parameters.AddWithValue("@giro", xgirr);
+                    comm.Parameters.AddWithValue("@forma", xA);
                 if (String.Equals(xTDTE, "61"))
                 {
                     comm.Parameters.AddWithValue("@tpodocref", xTpoDoc);
@@ -447,8 +521,8 @@ namespace Sincro2
                 }
                 if (String.Equals(xTDTE, "52"))
                 {
-                    comm.Parameters.AddWithValue("@IndTraslado", xTipo);
-                    comm.Parameters.AddWithValue("@TipoDespacho", xInd);
+                    comm.Parameters.AddWithValue("@IndTraslado", xInd);
+                    comm.Parameters.AddWithValue("@TipoDespacho", xTipo);
                 }
 
 
@@ -488,6 +562,16 @@ namespace Sincro2
         }
 
         public void eje(){
+
+           // Trace.Listeners.Add(new TextWriterTraceListener("yourlog.log"));
+           // Trace.AutoFlush = true;
+           // Trace.Indent();
+           // Trace.WriteLine("Entering Main");
+           // Console.WriteLine("Hello World.");
+           // Trace.WriteLine("Exiting Main");
+          //  Trace.Unindent();
+          //Tra  Trace.Flush();
+
 
             //datos sqlite
             SQLiteConnection sqlite_conn;
@@ -536,9 +620,14 @@ namespace Sincro2
                     {
                         String archivo = Path.GetFileName(f);
                         Console.WriteLine(Path.GetFileName(f));
+                  //  Trace.Indent();
+                  //  Trace.WriteLine(archivo);
+                  //  Console.WriteLine(archivo);
 
-                        // tm.leerxml(archivo);
-                        leerxml(archivo, dxml, dsal, ip, user,  pa,  database);
+                  //  Trace.Unindent();
+                  //  Trace.Flush();
+                    // tm.leerxml(archivo);
+                    leerxml(archivo, dxml, dsal, ip, user,  pa,  database);
 
                     }
                     foreach (string d in Directory.GetDirectories(dir))
@@ -554,7 +643,13 @@ namespace Sincro2
                 catch (System.Exception ex)
                 {
                     Console.WriteLine(ex.Message);
-                }
+               // Trace.Indent();
+               // Trace.WriteLine(ex.Message);
+                Console.WriteLine(ex.Message);
+               
+               // Trace.Unindent();
+               // Trace.Flush();
+            }
 
             }
 
